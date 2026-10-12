@@ -1,0 +1,26 @@
+BandIt v2 model code (vendored)
+
+Source:  https://github.com/kwatcharasupat/bandit-v2
+Commit:  d5563d9031e95fdaa3e5a73d5020b9a0df61adb6 (2025-07-29)
+Paper:   K. N. Watcharasupat, C.-W. Wu, I. Orife, "Remastering Divide and
+         Remaster: A Cinematic Audio Source Separation Dataset with
+         Multilingual Support", arXiv:2407.07275.
+License: Apache License 2.0 (see LICENSE in this directory).
+
+Files taken from upstream `src/models/bandit/` and `src/models/base.py`.
+`film.py` is not vendored (unused by the Bandit model).
+
+Modifications made for frootio (each modified file carries a header):
+- Imports made package-relative (`frootio.stems.bandit`).
+- base.py: `BaseEndToEndModule` derives from `torch.nn.Module` instead of
+  `pytorch_lightning.LightningModule` (no Lightning dependency).
+- utils.py: librosa `hz_to_midi`/`midi_to_hz` replaced by the identical
+  numpy formulas; band-split classes not used by the Bandit model
+  (vocal/bass/drum/mel specs, commented-out bark/ERB code, `__main__`) removed.
+- bandsplit.py, maskestim.py, tfmodel.py: training-only activation
+  checkpointing (`checkpoint_sequential`) and `torch.compile(..., disable=True)`
+  wrappers removed; the wrapped modules are called directly. Unused
+  `MaskEstimationModule` removed.
+
+Model weights (not included here; downloaded at runtime from
+https://zenodo.org/records/12701995) are licensed CC BY-SA 4.0 by their authors.

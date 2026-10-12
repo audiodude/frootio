@@ -1,0 +1,394 @@
+/* Episode workspace: script | board | panel. */
+
+.ws {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: calc(100vh - 90px);
+}
+
+.ws-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.ws-top h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.ws-top input[type="number"] {
+  width: 4em;
+}
+
+.ws-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(300px, 1fr);
+  gap: 14px;
+}
+
+.ws-grid.with-panel {
+  grid-template-columns: minmax(300px, 1fr) minmax(280px, 0.8fr) minmax(380px, 1.1fr);
+}
+
+.ws-script,
+.ws-board,
+.ws-panel {
+  min-height: 0;
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.ws-script {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ws-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.ws-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  margin-right: auto;
+}
+
+.ws-editor {
+  flex: 1;
+  min-height: 200px;
+  display: flex;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.ws-gutter {
+  overflow: hidden;
+  padding: 6px 0;
+  background: #18191e;
+  color: var(--muted);
+  text-align: right;
+  user-select: none;
+  min-width: 3.6em;
+}
+
+.ws-gutter-line {
+  height: 20px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.ws-gutter-line.has-warning {
+  color: var(--warn);
+  background: rgba(255, 138, 92, 0.12);
+  cursor: help;
+}
+
+.ws-editor textarea {
+  flex: 1;
+  resize: none;
+  border: 0;
+  outline: none;
+  padding: 6px 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  line-height: inherit;
+  white-space: pre;
+  overflow: auto;
+}
+
+.ws-script-foot {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 6px 0;
+  font-size: 0.85rem;
+}
+
+.ws-lint {
+  max-height: 25%;
+  overflow: auto;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+.ws-muted {
+  color: var(--muted);
+}
+
+.ws-note {
+  background: #23262e;
+  border-left: 3px solid var(--accent);
+  padding: 6px 10px;
+  margin: 6px 0;
+  font-size: 0.9rem;
+}
+
+button.link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--accent);
+  cursor: pointer;
+  font: inherit;
+}
+
+.ws-split {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.ws-split label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ws-model {
+  flex: 1;
+  min-width: 160px;
+}
+
+.ws-total {
+  margin: 8px 0;
+  font-size: 0.9rem;
+}
+
+.ws-cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ws-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  cursor: pointer;
+  background: #1a1c21;
+}
+
+.ws-card.selected {
+  border-color: var(--accent);
+}
+
+.ws-card.dragging {
+  opacity: 0.4;
+}
+
+.ws-card.drop-before {
+  box-shadow: 0 -3px 0 var(--accent);
+}
+
+.ws-card.drop-after {
+  box-shadow: 0 3px 0 var(--accent);
+}
+
+.ws-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ws-handle {
+  cursor: grab;
+  color: var(--muted);
+}
+
+.ws-card-archive {
+  margin-left: auto;
+  font-size: 0.8rem;
+}
+
+.ws-card-meta {
+  font-size: 0.8rem;
+}
+
+.ws-card-text {
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.badge {
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: #2d3240;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.badge.warn-badge {
+  background: rgba(255, 138, 92, 0.2);
+  color: var(--warn);
+}
+
+.badge.muted-badge {
+  color: var(--muted);
+}
+
+.ws-archived {
+  margin-top: 14px;
+}
+
+.ws-archived ul {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ws-archived li {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+.ws-proposal {
+  border: 1px dashed var(--accent);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 8px 0;
+}
+
+.ws-proposal ol {
+  padding-left: 20px;
+}
+
+.ws-pre {
+  white-space: pre-wrap;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  background: #18191e;
+  padding: 6px;
+  border-radius: 4px;
+  margin: 4px 0;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.ws-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ws-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ws-field-col {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.ws-label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  min-width: 7em;
+}
+
+.ws-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 12px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.chip.on {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.chip-n {
+  color: var(--accent);
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.ws-panel h3 {
+  margin: 14px 0 6px;
+  font-size: 1rem;
+}
+
+.ws-part {
+  margin-bottom: 10px;
+}
+
+.ws-part-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 3px;
+  flex-wrap: wrap;
+}
+
+.ws-part-head > :last-child {
+  margin-left: auto;
+}
+
+.ws-draft {
+  width: 100%;
+  background: #18191e;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.ws-draft.dirty {
+  border-color: var(--accent);
+}
+
+.ws-rewrite {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.ws-joined {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-bottom: 12px;
+}

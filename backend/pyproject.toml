@@ -1,0 +1,46 @@
+[project]
+name = "frootio"
+version = "0.1.0"
+description = "Local web app for planning, generating and assembling AI fruit-drama episodes"
+requires-python = ">=3.12"
+dependencies = [
+    "fal-client>=1.0.3",
+    "fastapi>=0.143.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
+    "python-multipart>=0.0.32",
+    "nvidia-cublas-cu12>=12.4",
+    "stable-ts[fw]>=2.19.1",
+    "torch==2.14.1",
+    "torchaudio==2.11.0",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+frootio = "frootio.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["frootio"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.ruff]
+line-length = 110
+extend-exclude = ["frootio/stems/bandit"]  # vendored upstream code
+
+[tool.ruff.lint]
+select = ["F", "E", "W", "I", "B", "UP"]
