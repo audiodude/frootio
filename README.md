@@ -52,3 +52,7 @@ To **punch in** a replacement for a garbled line, tick **replace voice** on the 
 ## Spend
 
 The Generate button shows each H3 take's estimated cost before you click. Each take's cost is computed from fal's formula. Video spend per episode is hard-capped at $20 by default (editable per episode). Image, TTS and LLM costs are logged too and appear in the per-episode and per-series totals.
+
+## License
+
+Apache-2.0; see [`LICENSE`](LICENSE). The vendored BandIt v2 model code in `backend/frootio/stems/bandit/` is also Apache-2.0 (its own `LICENSE`/`NOTICE`); the BandIt checkpoint weights downloaded at runtime are CC BY-SA 4.0.

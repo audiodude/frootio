@@ -2,6 +2,8 @@
 name = "frootio"
 version = "0.1.0"
 description = "Local web app for planning, generating and assembling AI fruit-drama episodes"
+license = "Apache-2.0"
+license-files = ["../LICENSE"]
 requires-python = ">=3.12"
 dependencies = [
     "fal-client>=1.0.3",
