@@ -104,6 +104,8 @@ export interface EpisodeSummary {
   archived: boolean;
   script_versions: number;
   snippets: number;
+  selected_snippets?: number;
+  latest_export_url?: string | null;
   spend_usd: number;
 }
 

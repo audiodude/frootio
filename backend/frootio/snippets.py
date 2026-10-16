@@ -12,7 +12,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import config, continuity, db, events, prompt, script
+from . import config, continuity, db, events, media, prompt, script
 
 
 @dataclass
@@ -220,6 +220,14 @@ def serialize(conn: sqlite3.Connection, s: sqlite3.Row) -> dict[str, Any]:
     out["take_count"] = conn.execute(
         "SELECT COUNT(*) FROM takes WHERE snippet_id = ?", (s["id"],)
     ).fetchone()[0]
+    sel_poster = (
+        conn.execute("SELECT poster_path FROM takes WHERE id = ?", (s["selected_take_id"],)).fetchone()
+        if s["selected_take_id"] is not None
+        else None
+    )
+    out["selected_take_poster_url"] = (
+        media.url(sel_poster["poster_path"]) if sel_poster and sel_poster["poster_path"] else None
+    )
     out["is_first"] = is_first(conn, s)
     out["stale"] = continuity.is_stale(conn, s["id"])
     built = prompt.build_from_row(conn, s)

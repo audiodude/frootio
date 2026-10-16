@@ -34,9 +34,9 @@ export function Thumb({ image, size = 120 }: { image: LibraryImage | null; size?
 export function ImageUpload({ base, invalidate }: { base: string; invalidate: unknown[] }) {
   const qc = useQueryClient();
   const upload = useMutation({
-    mutationFn: (files: FileList) => {
+    mutationFn: (files: File[]) => {
       const form = new FormData();
-      for (const f of Array.from(files)) form.append("files", f);
+      for (const f of files) form.append("files", f);
       return api.post(`${base}/images`, form);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: invalidate }),
@@ -50,8 +50,9 @@ export function ImageUpload({ base, invalidate }: { base: string; invalidate: un
         multiple
         hidden
         onChange={(e) => {
-          if (e.target.files?.length) upload.mutate(e.target.files);
+          const picked = e.target.files ? Array.from(e.target.files) : [];
           e.target.value = "";
+          if (picked.length) upload.mutate(picked);
         }}
       />
       <ErrorLine error={upload.error} />

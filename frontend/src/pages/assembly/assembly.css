@@ -1,40 +1,580 @@
-.assembly .muted { color: var(--muted); }
-.assembly .small { font-size: 0.85rem; }
-.assembly .ok { color: #7bd88f; }
-.assembly button {
-  background: var(--panel);
-  color: var(--text);
+/* Assembly & Mix Studio (NLE Master-Detail Layout) */
+
+.assembly-studio {
+  height: calc(100vh - 76px);
+}
+
+.asm-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.asm-export-wrap {
+  position: relative;
+}
+
+.asm-export-popover {
+  width: 320px;
+}
+
+.asm-exports-title {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+  font-weight: 600;
+}
+
+.exports {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.export-item {
+  background: #14161b;
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 4px 10px;
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.asm-alert {
+  padding: 6px 12px;
+  background: rgba(255, 138, 92, 0.1);
+  border: 1px solid rgba(255, 138, 92, 0.3);
+  border-radius: 7px;
+}
+
+/* Main 2-Column NLE Layout */
+.asm-nle-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 14px;
+}
+
+/* Left Column: Stage Monitor + Master Audio Strip */
+.asm-stage-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.asm-monitor-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.asm-monitor-switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: #121317;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.asm-mon-tab {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  padding: 5px 6px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.asm-mon-tab.active {
+  background: var(--text);
+  color: #111;
+}
+
+.asm-monitor-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.asm-video-frame {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-height: 410px;
+  background: #090a0d;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.asm-video-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.asm-empty-preview {
+  padding: 20px;
+  text-align: center;
+}
+
+.asm-transport-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.8rem;
+}
+
+.asm-timecode {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Master Audio & Captions Strip */
+.asm-master-strip {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asm-strip-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.asm-music-pick {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.asm-music-pick select {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.82rem;
+}
+
+.asm-strip-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.asm-mix-drawer {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.asm-mix-drawer .field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+.asm-mix-drawer .field input[type="number"] {
+  width: 5em;
+}
+
+.music-audition {
+  width: 100%;
+  height: 30px;
+}
+
+/* Right Column: Sequence Timeline */
+.asm-timeline-col {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.asm-timeline-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.asm-timeline-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.asm-takes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Timeline Clip Cards */
+.asm-card {
+  background: #17191f;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color 0.12s, background 0.12s;
+}
+
+.asm-card.collapsed {
+  cursor: pointer;
+  padding: 8px 12px;
+}
+.asm-card.collapsed:hover {
+  border-color: #434857;
+  background: #1b1e26;
+}
+
+.asm-card.active-card {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+  background: #1b1e25;
+}
+
+.asm-card.missing {
+  border-style: dashed;
+}
+
+.asm-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.asm-card-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.asm-strip-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: #13151a;
+  border: 1px solid var(--border);
+  border-radius: 5px;
   cursor: pointer;
 }
-.assembly button:disabled { opacity: 0.5; cursor: default; }
-.assembly button.primary { background: var(--accent); color: #111; border-color: var(--accent); font-weight: 600; }
-.assembly input, .assembly select {
-  background: var(--bg);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 3px 6px;
+
+.accent-text {
+  color: var(--accent);
 }
-.assembly input[type="number"] { width: 6em; }
 
-.asm-layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; align-items: start; }
-.asm-takes { display: flex; flex-direction: column; gap: 14px; }
-.asm-side { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 10px; }
+.asm-collapsed-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
 
-.asm-card, .asm-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
-.asm-card header { display: flex; gap: 12px; align-items: baseline; margin-bottom: 8px; }
-.asm-card-body { display: flex; gap: 14px; }
-.asm-card video { width: 180px; aspect-ratio: 768 / 1344; background: #000; border-radius: 4px; flex: none; }
-.asm-card-controls { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
-.trim-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.trim-row label { display: flex; gap: 4px; align-items: center; }
-.overdubs { border-top: 1px solid var(--border); padding-top: 6px; display: flex; flex-direction: column; gap: 6px; }
-.overdubs input[type="number"] { width: 64px; }
-.overdub-text { flex: 1; min-width: 200px; }
-.overdub-quote { font-style: italic; }
+.asm-collapsed-wave {
+  flex: 1;
+  min-width: 140px;
+}
+
+.asm-collapsed-slice {
+  max-width: 45%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.asm-card-controls {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Interactive Waveform + Draggable Trim Handles */
+.waveform-wrap {
+  position: relative;
+  width: 100%;
+  background: #101217;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+}
+
+.waveform-wrap canvas {
+  display: block;
+  cursor: pointer;
+}
+
+.trim-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  margin-left: -6px;
+  cursor: ew-resize;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  z-index: 5;
+}
+.trim-handle::after {
+  content: "";
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 6px;
+  border-radius: 3px;
+  background: var(--accent);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+}
+
+.trim-tag {
+  position: absolute;
+  top: 2px;
+  background: rgba(18, 19, 23, 0.88);
+  color: var(--accent);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 3px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.trim-handle-in .trim-tag {
+  left: 8px;
+}
+.trim-handle-out .trim-tag {
+  right: 8px;
+}
+
+.waveform-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.trim-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.numeric-trim-bar {
+  background: #13151a;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.numeric-trim-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.numeric-trim-bar input[type="number"] {
+  width: 5.5em;
+}
+
+/* Synchronized Word Pills Track */
+.captions-preview {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.captions-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.word-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.word-timeline .word {
+  padding: 2px 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  background: #14161b;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.word-timeline .word .t {
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 4px;
+  font-size: 0.68rem;
+}
+
+.word-timeline .word.dropped {
+  opacity: 0.32;
+  text-decoration: line-through;
+}
+
+.word-timeline .word.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #111;
+}
+.word-timeline .word.active .t {
+  color: #222;
+}
+
+.word-timeline .word.selected-word {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.word-editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #13151a;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+.word-editor-bar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.word-editor-bar input[type="number"] {
+  width: 5em;
+  margin-left: 2px;
+}
+
+/* Overdubs / Voice Punch-in Track */
+.overdubs {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overdubs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.overdubs-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.accent-outline {
+  border-color: var(--accent) !important;
+  color: var(--accent) !important;
+  background: transparent !important;
+}
+
+.overdub-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #13151a;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.overdub-char {
+  color: var(--accent);
+  font-size: 0.84rem;
+}
+
+.overdub-quote {
+  font-style: italic;
+  font-size: 0.84rem;
+}
+
+.overdub-controls {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.overdub-controls input[type="number"] {
+  width: 4.5em;
+  margin-left: 3px;
+}
+
+.overdub-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #13151a;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.overdub-text {
+  flex: 1;
+  min-width: 180px;
+}
+
 .spinner {
   display: inline-block;
   width: 0.9em;
@@ -46,25 +586,24 @@
   animation: spin 0.8s linear infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
-.waveform canvas { display: block; background: #111216; border-radius: 4px; cursor: pointer; }
 
-.captions-preview { border-top: 1px solid var(--border); padding-top: 6px; }
-.word-timeline { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.assembly .word-timeline .word { padding: 1px 6px; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; }
-.word-timeline .word .t { color: var(--muted); font-weight: 400; margin-left: 4px; font-size: 0.7rem; }
-.word-timeline .word.dropped { opacity: 0.35; text-decoration: line-through; }
-.assembly .word-timeline .word.active { background: #ffe600; color: #111; }
-.caption-lines { margin: 4px 0 0; padding-left: 18px; }
-
-.asm-panel h2 { margin: 0 0 10px; font-size: 1rem; }
-.asm-panel .field { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
-.asm-panel .field > span:first-child { width: 7.5em; }
-.asm-panel .field.checkbox > span:first-child { width: auto; }
-.music-audition { width: 100%; height: 32px; }
-.preview-video { width: 100%; aspect-ratio: 768 / 1344; background: #000; margin-top: 8px; border-radius: 4px; }
-.progress { position: relative; background: #111216; border-radius: 4px; height: 18px; margin-top: 8px; overflow: hidden; }
-.progress .bar { position: absolute; inset: 0 auto 0 0; background: #6b5a14; }
-.progress span { position: relative; padding-left: 6px; }
-.exports { list-style: none; padding: 0; margin: 10px 0 0; display: flex; flex-direction: column; gap: 4px; }
+.progress {
+  position: relative;
+  background: #111216;
+  border-radius: 4px;
+  height: 18px;
+  overflow: hidden;
+}
+.progress .bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: #6b5a14;
+}
+.progress span {
+  position: relative;
+  padding-left: 6px;
+}

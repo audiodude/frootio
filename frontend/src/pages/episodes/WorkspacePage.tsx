@@ -1,20 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useBlocker, useParams, useSearchParams } from "react-router-dom";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, formatUsd, useServerEvent } from "../../api";
+import { useBlocker, useParams, useSearchParams } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, useServerEvent } from "../../api";
 import type { Board, Episode } from "../../types/workspace";
+import EpisodeHeader from "./EpisodeHeader";
 import ScriptEditor from "./ScriptEditor";
 import SnippetBoard from "./SnippetBoard";
 import SnippetPanel from "./SnippetPanel";
 import "./workspace.css";
 
-/** Episode workspace: script editor | snippet board | selected snippet panel. */
+/** Episode studio workspace: collapsible script | visual storyboard | tabbed scene & takes inspector. */
 export default function WorkspacePage() {
   const episodeId = Number(useParams().id);
   const queryClient = useQueryClient();
   const [params, setParams] = useSearchParams();
   const selectedId = params.get("snippet") ? Number(params.get("snippet")) : null;
   const [scriptDirty, setScriptDirty] = useState(false);
+  const [scriptCollapsed, setScriptCollapsed] = useState(false);
 
   const episode = useQuery({
     queryKey: ["episode", episodeId],
@@ -24,11 +26,7 @@ export default function WorkspacePage() {
     queryKey: ["snippets", episodeId],
     queryFn: () => api.get<Board>(`/episodes/${episodeId}/snippets`),
   });
-  const patchEpisode = useMutation({
-    mutationFn: (body: Partial<Pick<Episode, "default_location_id" | "take_count">>) =>
-      api.patch<Episode>(`/episodes/${episodeId}`, body),
-    onSuccess: (ep) => queryClient.setQueryData(["episode", episodeId], ep),
-  });
+
   useServerEvent((event) => {
     if (event.type === "spend" && event.episode_id === episodeId)
       void queryClient.invalidateQueries({ queryKey: ["episode", episodeId] });
@@ -67,6 +65,14 @@ export default function WorkspacePage() {
     [setParams],
   );
 
+  // Auto-select the first active snippet if none is selected and snippets exist
+  useEffect(() => {
+    const first = board.data?.active[0];
+    if (selectedId === null && first) {
+      select(first.id);
+    }
+  }, [selectedId, board.data, select]);
+
   if (episode.isError) return <p className="warn page">{(episode.error as Error).message}</p>;
   if (!episode.data || !board.data) return <p className="page">Loading…</p>;
   const ep = episode.data;
@@ -74,53 +80,41 @@ export default function WorkspacePage() {
   const selected = all.find((s) => s.id === selectedId) ?? null;
   const activeIndex = board.data.active.findIndex((s) => s.id === selectedId);
 
+  const gridClass = [
+    "ws-grid",
+    selected ? "with-panel" : "",
+    scriptCollapsed ? "script-collapsed" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div className="ws">
-      <header className="ws-top">
-        <h1>
-          <Link to={`/series/${ep.series_id}`}>{ep.series.name}</Link> · Episode {ep.number}
-          {ep.title && ` · ${ep.title}`}
-        </h1>
-        <label>
-          Default location{" "}
-          <select
-            value={ep.default_location_id ?? ""}
-            onChange={(e) =>
-              patchEpisode.mutate({ default_location_id: e.target.value === "" ? null : Number(e.target.value) })
-            }
-          >
-            <option value="">(none)</option>
-            {ep.locations
-              .filter((l) => !l.archived || l.id === ep.default_location_id)
-              .map((l) => (
-                <option key={l.id} value={l.id}>
-                  {l.name}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label>
-          Takes per click{" "}
-          <input
-            type="number"
-            min={1}
-            max={8}
-            value={ep.take_count}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              if (n >= 1) patchEpisode.mutate({ take_count: n });
-            }}
+      <EpisodeHeader
+        episodeId={episodeId}
+        episode={ep}
+        episodeNumber={ep.number}
+        episodeTitle={ep.title}
+        mode="workspace"
+      />
+      <div className={gridClass}>
+        {scriptCollapsed ? (
+          <aside className="ws-script-rail" onClick={() => setScriptCollapsed(false)} title="Expand Script Editor">
+            <button type="button" className="ws-rail-btn">
+              ⟫
+            </button>
+            <span className="ws-rail-label">
+              Script {scriptDirty ? "● unsaved" : ""}
+            </span>
+          </aside>
+        ) : (
+          <ScriptEditor
+            episodeId={episodeId}
+            onDirtyChange={setScriptDirty}
+            activeSlice={selected?.script_slice ?? null}
+            onCollapse={() => setScriptCollapsed(true)}
           />
-        </label>
-        <span className="ws-muted">
-          spent {formatUsd(ep.spend.total_usd)} (video {formatUsd(ep.spend.video_usd)} / cap{" "}
-          {formatUsd(ep.spend_cap_usd)})
-        </span>
-        <Link to={`/episodes/${episodeId}/assembly`}>Assembly →</Link>
-        {patchEpisode.isError && <span className="warn">{patchEpisode.error.message}</span>}
-      </header>
-      <div className={selected ? "ws-grid with-panel" : "ws-grid"}>
-        <ScriptEditor episodeId={episodeId} onDirtyChange={setScriptDirty} />
+        )}
         <SnippetBoard
           episode={ep}
           board={board.data}
@@ -128,7 +122,7 @@ export default function WorkspacePage() {
           onSelect={select}
           scriptDirty={scriptDirty}
         />
-        {selected && (
+        {selected ? (
           <SnippetPanel
             key={selected.id}
             episode={ep}
@@ -136,6 +130,16 @@ export default function WorkspacePage() {
             index={activeIndex >= 0 ? activeIndex : null}
             onClose={() => select(null)}
           />
+        ) : (
+          <aside className="ws-panel ws-panel-empty">
+            <div className="ws-empty-state">
+              <h3>No scene selected</h3>
+              <p className="muted">
+                Click any scene card in the Storyboard to inspect its cast, action prompt, and 9:16 video takes, or
+                split your script to generate scenes automatically.
+              </p>
+            </div>
+          </aside>
         )}
       </div>
     </div>
