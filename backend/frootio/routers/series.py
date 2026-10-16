@@ -49,12 +49,21 @@ def episodes_json(conn, series_id: int) -> list[dict[str, Any]]:
         " e.take_count, e.spend_cap_usd, e.archived, e.created_at, e.updated_at,"
         " (SELECT COUNT(*) FROM script_versions v WHERE v.episode_id = e.id) AS script_versions,"
         " (SELECT COUNT(*) FROM snippets sn WHERE sn.episode_id = e.id AND sn.archived = 0) AS snippets,"
+        " (SELECT COUNT(*) FROM snippets sn WHERE sn.episode_id = e.id AND sn.archived = 0 AND sn.selected_take_id IS NOT NULL) AS selected_snippets,"
+        " (SELECT ex.path FROM exports ex WHERE ex.episode_id = e.id AND ex.status = 'done' ORDER BY ex.id DESC LIMIT 1) AS latest_export_path,"
         " (SELECT COALESCE(SUM(amount_usd), 0) FROM spend sp WHERE sp.episode_id = e.id) AS spend_usd"
         " FROM episodes e LEFT JOIN locations l ON l.id = e.default_location_id"
         " WHERE e.series_id = ? ORDER BY e.number",
         (series_id,),
     ).fetchall()
-    return [{**dict(r), "archived": bool(r["archived"])} for r in rs]
+    return [
+        {
+            **dict(r),
+            "archived": bool(r["archived"]),
+            "latest_export_url": media.url(r["latest_export_path"]) if r["latest_export_path"] else None,
+        }
+        for r in rs
+    ]
 
 
 def _summary(conn, s) -> dict[str, Any]:

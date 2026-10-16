@@ -435,6 +435,49 @@ def store_alignment(conn, take_id: int, text_hash: str, text: str, words: list, 
     conn.commit()
 
 
+
+def update_alignment(conn, snippet_id: int, words: list[dict[str, Any]]) -> dict[str, Any]:
+    """Save manually adjusted caption word timings for a snippet's selected take."""
+    s = conn.execute(
+        "SELECT id, episode_id, script_slice, selected_take_id FROM snippets WHERE id = ?", (snippet_id,)
+    ).fetchone()
+    if s is None or s["selected_take_id"] is None:
+        raise NotFound("snippet or selected take not found")
+    take = db.row(conn.execute("SELECT * FROM takes WHERE id = ?", (s["selected_take_id"],)).fetchone())
+    assert take is not None
+    lines = captions.caption_lines(s["script_slice"])
+    lines_on_take = overdub.active(conn, take["id"])
+    text_hash = caption_key(lines, take, lines_on_take)
+    text = "\n".join(lines)
+    conn.execute(
+        "INSERT INTO caption_alignments (take_id, slice_sha256, caption_text, words, method, created_at)"
+        " VALUES (?, ?, ?, ?, 'aligned', ?)"
+        " ON CONFLICT(take_id, slice_sha256) DO UPDATE SET words = excluded.words, created_at = excluded.created_at",
+        (take["id"], text_hash, text, db.dumps(words), db.now()),
+    )
+    conn.commit()
+    events.publish({"type": "assembly", "episode_id": s["episode_id"], "kind": "align", "take_id": take["id"]})
+    return {"take_id": take["id"], "words": words}
+
+
+def reset_alignment(conn, snippet_id: int) -> int | None:
+    """Delete cached alignment for a snippet's selected take and re-queue automatic alignment."""
+    s = conn.execute("SELECT id, episode_id FROM snippets WHERE id = ?", (snippet_id,)).fetchone()
+    if s is None:
+        raise NotFound("snippet not found")
+    ep = episode_context(conn, s["episode_id"])
+    item = next((it for it in load_items(conn, ep) if it.snippet_id == snippet_id), None)
+    if item is None or item.take is None:
+        raise NotFound("snippet has no selected take")
+    conn.execute(
+        "DELETE FROM caption_alignments WHERE take_id = ? AND slice_sha256 = ?",
+        (item.take["id"], item.caption_hash),
+    )
+    conn.commit()
+    job_id = request_alignment(conn, item)
+    events.publish({"type": "assembly", "episode_id": s["episode_id"], "kind": "align", "take_id": item.take["id"]})
+    return job_id
+
 def _pending_job(conn, kind: str, **match: Any) -> int | None:
     sql = "SELECT id FROM jobs WHERE kind = ? AND status IN ('queued', 'running')"
     params: list[Any] = [kind]

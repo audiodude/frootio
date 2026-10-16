@@ -49,6 +49,8 @@ Each take card on the assembly screen has a **Strip all audio (voice + fx)** tog
 
 To **punch in** a replacement for a garbled line, tick **replace voice** on the new line. The take's own voice is silenced for the line's span, with 50ms fades, while foley and ambience keep playing. Line it up with the original using the start time. In the browser, Audition can only mute the whole take during the line, fx included; the preview and export silence just the voice. To replace all of a take's audio instead, use **Strip all audio**. Lines still play over a stripped take.
 
+**Caption timing:** captions are force-aligned automatically when the assembly screen opens. To fix a word that's early or late, expand the scene, click **Edit timings**, click the word, and set its start/end (or snap them to the playhead). You can also shift a word and everything after it, or the whole scene, by 0.1s. **Save timings** stores the edits and marks the preview stale; **Auto Re-align** discards them and re-runs alignment.
+
 ## Spend
 
 The Generate button shows each H3 take's estimated cost before you click. Each take's cost is computed from fal's formula. Video spend per episode is hard-capped at $20 by default (editable per episode). Image, TTS and LLM costs are logged too and appear in the per-episode and per-series totals.

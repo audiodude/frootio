@@ -25,9 +25,9 @@ export default function OverdubPanel({
   const [characterId, setCharacterId] = useState<number | null>(null);
   const [text, setText] = useState("");
   const [exaggeration, setExaggeration] = useState(0.5);
+  const [adding, setAdding] = useState(false);
   const chosen = cast.find((c) => c.id === characterId) ?? null;
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["assembly", episodeId] });
   const create = useMutation({
     mutationFn: () =>
       api.post<Overdub>(`/takes/${take.id}/overdubs`, {
@@ -38,58 +38,89 @@ export default function OverdubPanel({
       }),
     onSuccess: () => {
       setText("");
-      void invalidate();
+      setAdding(false);
+      void queryClient.invalidateQueries({ queryKey: ["assembly", episodeId] });
     },
   });
 
   return (
     <div className="overdubs">
-      <div className="ws-label small">Fix-in-post lines</div>
-      {take.overdubs.map((o) => (
-        <OverdubRow key={o.id} o={o} videoRef={videoRef} currentTime={currentTime} onChange={invalidate} />
-      ))}
-      <div className="trim-row">
-        <select value={characterId ?? ""} onChange={(e) => setCharacterId(e.target.value ? Number(e.target.value) : null)}>
-          <option value="">Character…</option>
-          {cast.map((c) => (
-            <option key={c.id} value={c.id} disabled={!c.has_voice}>
-              {c.name}
-              {c.has_voice ? "" : " (no voice sample)"}
-            </option>
-          ))}
-        </select>
-        <input
-          className="overdub-text"
-          placeholder="The line, e.g. THE OVEN IS ON FIRE!"
-          value={text}
-          maxLength={300}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <label title="Chatterbox emotion exaggeration (0.25–2)">
-          Emotion
-          <input
-            type="number"
-            min={0.25}
-            max={2}
-            step={0.05}
-            value={exaggeration}
-            onChange={(e) => setExaggeration(Number(e.target.value))}
-          />
-        </label>
-        <button
-          className="primary"
-          disabled={!chosen?.has_voice || !text.trim() || create.isPending}
-          onClick={() => create.mutate()}
-          title="Generates the line in the character's voice and places it at the playhead"
-        >
-          {create.isPending ? "Generating…" : `Generate at ${currentTime.toFixed(2)}s`}
-        </button>
-        {create.error && (
-          <span className="warn small">
-            {create.error instanceof ApiError ? create.error.detail : String(create.error)}
-          </span>
+      <div className="overdubs-head">
+        <span className="overdubs-title">
+          🎙 Fix-in-Post Voice Lines ({take.overdubs.length})
+        </span>
+        {!adding && (
+          <button
+            type="button"
+            className="small-btn accent-outline"
+            onClick={() => setAdding(true)}
+            title="Generate a replacement or additional dialogue line at the current playhead"
+          >
+            + Add Line @ {currentTime.toFixed(2)}s
+          </button>
         )}
       </div>
+
+      {take.overdubs.map((o) => (
+        <OverdubRow
+          key={o.id}
+          o={o}
+          videoRef={videoRef}
+          currentTime={currentTime}
+          onChange={() => void queryClient.invalidateQueries({ queryKey: ["assembly", episodeId] })}
+        />
+      ))}
+
+      {adding && (
+        <div className="overdub-add-bar">
+          <select
+            value={characterId ?? ""}
+            onChange={(e) => setCharacterId(e.target.value ? Number(e.target.value) : null)}
+          >
+            <option value="">Character…</option>
+            {cast.map((c) => (
+              <option key={c.id} value={c.id} disabled={!c.has_voice}>
+                {c.name}
+                {c.has_voice ? "" : " (no voice sample)"}
+              </option>
+            ))}
+          </select>
+          <input
+            className="overdub-text"
+            placeholder="Replacement or extra line, e.g. THE OVEN IS ON FIRE!"
+            value={text}
+            maxLength={300}
+            onChange={(e) => setText(e.target.value)}
+          />
+          <label className="small muted" title="Chatterbox emotion exaggeration (0.25–2)">
+            Emotion
+            <input
+              type="number"
+              min={0.25}
+              max={2}
+              step={0.05}
+              value={exaggeration}
+              onChange={(e) => setExaggeration(Number(e.target.value))}
+            />
+          </label>
+          <button
+            className="primary small-btn"
+            disabled={!chosen?.has_voice || !text.trim() || create.isPending}
+            onClick={() => create.mutate()}
+            title="Generates the line in the character's voice and places it at the playhead"
+          >
+            {create.isPending ? "Generating…" : `Generate @ ${currentTime.toFixed(2)}s`}
+          </button>
+          <button type="button" className="link small" onClick={() => setAdding(false)}>
+            cancel
+          </button>
+          {create.error && (
+            <span className="warn small">
+              {create.error instanceof ApiError ? create.error.detail : String(create.error)}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -127,9 +158,6 @@ function OverdubRow({
     onSuccess: onChange,
   });
 
-  // Play the take from 1s before the line with the line on top. The browser only has the
-  // take's full mix, so a punch-in mutes the whole take (fx too) for the line; the render
-  // silences only the voice.
   const audition = () => {
     const v = videoRef.current;
     const a = audioRef.current;
@@ -148,8 +176,8 @@ function OverdubRow({
   };
 
   return (
-    <div className="trim-row overdub-row">
-      <strong>{o.character_name}</strong>
+    <div className="overdub-pill-row">
+      <strong className="overdub-char">{o.character_name}</strong>
       <span className="overdub-quote">“{o.text}”</span>
       {o.status === "queued" && (
         <span className="muted small" role="status">
@@ -158,34 +186,66 @@ function OverdubRow({
       )}
       {o.status === "failed" && <span className="warn small">failed: {o.error}</span>}
       {o.audio_url && <audio ref={audioRef} src={o.audio_url} preload="auto" />}
-      <label>
-        at
-        <input type="number" step={0.01} min={0} value={offset} onChange={(e) => setOffset(Number(e.target.value))} />s
-      </label>
-      <button onClick={() => setOffset(Number(currentTime.toFixed(3)))}>⟵ playhead</button>
-      <label>
-        vol
-        <input type="number" step={0.05} min={0} max={2} value={volume} onChange={(e) => setVolume(Number(e.target.value))} />
-      </label>
-      <label title="Punch-in: silence the take's own voice while this line plays (foley and ambience keep playing)">
-        <input
-          type="checkbox"
-          checked={o.replace_voice}
-          disabled={replace.isPending}
-          onChange={(e) => replace.mutate(e.target.checked)}
-        />
-        replace voice
-      </label>
-      <button disabled={o.status !== "done"} onClick={audition}>
-        ▶ Audition
-      </button>
-      <button className="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate()}>
-        Save
-      </button>
-      <button disabled={remove.isPending} onClick={() => remove.mutate()}>
-        Remove
-      </button>
-      {o.cost_usd !== null && <span className="muted small">{formatUsd(o.cost_usd)}</span>}
+      <div className="overdub-controls">
+        <label className="small muted">
+          @
+          <input
+            type="number"
+            step={0.01}
+            min={0}
+            value={offset}
+            onChange={(e) => setOffset(Number(e.target.value))}
+          />
+          s
+        </label>
+        <button
+          className="small-btn"
+          title="Snap line start to current playhead"
+          onClick={() => setOffset(Number(currentTime.toFixed(3)))}
+        >
+          ⟵ playhead
+        </button>
+        <label className="small muted">
+          vol
+          <input
+            type="number"
+            step={0.05}
+            min={0}
+            max={2}
+            value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+          />
+        </label>
+        <label
+          className="small"
+          title="Punch-in: silence the take's own voice while this line plays (foley and ambience keep playing)"
+        >
+          <input
+            type="checkbox"
+            checked={o.replace_voice}
+            disabled={replace.isPending}
+            onChange={(e) => replace.mutate(e.target.checked)}
+          />{" "}
+          Punch-in
+        </label>
+        <button className="small-btn" disabled={o.status !== "done"} onClick={audition}>
+          ▶ Audition
+        </button>
+        {dirty && (
+          <button className="primary small-btn" disabled={save.isPending} onClick={() => save.mutate()}>
+            Save
+          </button>
+        )}
+        <button
+          className="link small muted"
+          title="Remove voice line"
+          disabled={remove.isPending}
+          onClick={() => remove.mutate()}
+        >
+          ✕
+        </button>
+        {o.cost_usd !== null && <span className="muted small">{formatUsd(o.cost_usd)}</span>}
+      </div>
       {[save.error, replace.error, remove.error].map(
         (e, i) =>
           e && (

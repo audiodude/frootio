@@ -229,6 +229,49 @@ def patch_audio(take_id: int, body: AudioBody, conn: db.Conn) -> dict[str, Any]:
     return {"id": take_id, "audio_muted": body.muted}
 
 
+
+class CaptionWordIn(BaseModel):
+    word: str
+    start: float = Field(ge=0)
+    end: float = Field(ge=0)
+    line: int = Field(ge=0)
+
+
+class CaptionsPutBody(BaseModel):
+    words: list[CaptionWordIn]
+
+
+@router.put("/snippets/{snippet_id}/captions")
+@router.post("/snippets/{snippet_id}/captions")
+def put_snippet_captions(snippet_id: int, body: CaptionsPutBody, conn: db.Conn) -> dict[str, Any]:
+    words = []
+    for w in body.words:
+        if not math.isfinite(w.start) or not math.isfinite(w.end):
+            raise HTTPException(422, "word start and end must be finite")
+        if w.end < w.start:
+            raise HTTPException(422, f"word {w.word!r} end ({w.end}) is before start ({w.start})")
+        words.append(
+            {
+                "word": w.word,
+                "start": round(w.start, 3),
+                "end": round(w.end, 3),
+                "line": w.line,
+            }
+        )
+    try:
+        return assembly.update_alignment(conn, snippet_id, words)
+    except assembly.NotFound as exc:
+        raise HTTPException(404, str(exc)) from None
+
+
+@router.post("/snippets/{snippet_id}/captions/realign")
+def realign_snippet_captions(snippet_id: int, conn: db.Conn) -> dict[str, Any]:
+    try:
+        job_id = assembly.reset_alignment(conn, snippet_id)
+        return {"job_id": job_id}
+    except assembly.NotFound as exc:
+        raise HTTPException(404, str(exc)) from None
+
 def _spec_or_409(conn, episode_id: int, captions_on: bool | None = None) -> assembly.RenderSpec:
     try:
         return assembly.build_spec(conn, episode_id, captions_on=captions_on)

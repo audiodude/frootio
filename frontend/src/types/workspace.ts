@@ -83,6 +83,7 @@ export interface Snippet {
   warnings: string[];
   selected_take_id: number | null;
   cast: { id: number; name: string; archived: boolean }[];
+  selected_take_poster_url?: string | null;
   estimate_s: number | null;
   take_count: number;
   is_first: boolean;
